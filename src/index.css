@@ -1,0 +1,96 @@
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+@layer base {
+  :root {
+    /* Signode brand palette — burnt orange, black, white */
+    --signode-orange: 20 92% 48%;
+    --signode-orange-deep: 18 88% 38%;
+    --signode-orange-soft: 24 95% 62%;
+    --signode-black: 0 0% 8%;
+    --signode-charcoal: 0 0% 16%;
+    --signode-white: 0 0% 100%;
+    --signode-cream: 30 25% 96%;
+
+    /* Shadcn tokens mapped to Signode palette */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 8%;
+
+    --primary: 20 92% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 30 10% 94%;
+    --muted-foreground: 0 0% 32%;
+
+    --accent: 20 92% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 10% 88%;
+    --input: 30 10% 88%;
+    --ring: 20 92% 48%;
+
+    --radius: 0.5rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .signode-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--signode-orange-deep)) 0%,
+      hsl(var(--signode-orange)) 55%,
+      hsl(var(--signode-orange-soft)) 100%
+    );
+  }
+  .signode-header-gradient {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--signode-black)) 0%,
+      hsl(var(--signode-charcoal)) 100%
+    );
+  }
+  .signode-wordmark {
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: hsl(var(--signode-white));
+  }
+  .signode-tagline {
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    font-size: 0.6rem;
+    color: hsl(var(--signode-orange-soft));
+    text-transform: uppercase;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+}
