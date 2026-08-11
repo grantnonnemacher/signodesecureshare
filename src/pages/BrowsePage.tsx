@@ -16,9 +16,13 @@ import {
   Home as HomeIcon,
   Download,
   Lock,
+  ArrowLeft,
 } from "lucide-react";
 
-// Mock files per folder (deterministic based on folder path)
+// ---------------------------------------------------------------------------
+// Mock file data
+// ---------------------------------------------------------------------------
+
 function mockFilesFor(path: string) {
   const names = [
     "Q3-forecast.xlsx",
@@ -39,27 +43,33 @@ function mockFilesFor(path: string) {
 
 function expiryBadge(days: number) {
   if (days <= 0)
-    return (
-      <Badge className="bg-red-100 text-red-800 border-red-200">Expired</Badge>
-    );
+    return <Badge className="bg-red-100 text-red-800 border-red-200">Expired</Badge>;
   if (days <= 2)
-    return (
-      <Badge className="bg-red-100 text-red-800 border-red-200">
-        Expires in {days}d
-      </Badge>
-    );
+    return <Badge className="bg-red-100 text-red-800 border-red-200">Expires in {days}d</Badge>;
   if (days <= 4)
-    return (
-      <Badge className="bg-amber-100 text-amber-800 border-amber-200">
-        Expires in {days}d
-      </Badge>
-    );
-  return (
-    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
-      Expires in {days}d
-    </Badge>
-  );
+    return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Expires in {days}d</Badge>;
+  return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Expires in {days}d</Badge>;
 }
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function hasScopedDescendant(persona: any, path: string): boolean {
+  if (persona.scopedPaths.includes("*")) return true;
+  return persona.scopedPaths.some((s: string) => s.startsWith(path + "/"));
+}
+
+// The persona's "home" folder — the first (and usually only) path in their scope.
+// For Global Admin the home is the tree root.
+function personaHomePath(persona: any): string {
+  if (persona.scopedPaths.includes("*")) return FOLDER_TREE.path;
+  return persona.scopedPaths[0] || FOLDER_TREE.path;
+}
+
+// ---------------------------------------------------------------------------
+// Admin tree navigator (unchanged behavior)
+// ---------------------------------------------------------------------------
 
 function TreeNode({
   node,
@@ -110,7 +120,7 @@ function TreeNode({
         ) : (
           <span className="w-3.5" />
         )}
-        {node.path === "Home" ? (
+        {node.path === FOLDER_TREE.path ? (
           <HomeIcon className="h-4 w-4 shrink-0 text-[hsl(var(--signode-orange))]" />
         ) : isOpen ? (
           <FolderOpen className="h-4 w-4 shrink-0 text-[hsl(var(--signode-orange))]" />
@@ -140,97 +150,142 @@ function TreeNode({
   );
 }
 
-export function BrowsePage() {
-  const { persona } = usePersona();
-  const [params, setParams] = useSearchParams();
-  const initial = params.get("path") || "Home";
-  const [selectedPath, setSelectedPath] = React.useState(initial);
-  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({
-    Home: true,
-    "Home/AMER": true,
-    "Home/CORP": true,
-  });
+// ---------------------------------------------------------------------------
+// Non-admin scoped browser — no tree, just scope-relative navigation
+// ---------------------------------------------------------------------------
 
-  const scopeCheck = React.useCallback(
-    (p: string) => isPathInScope(persona, p) || hasScopedDescendant(persona, p),
-    [persona]
-  );
-
-  function onSelect(p: string) {
-    setSelectedPath(p);
-    setParams({ path: p });
-  }
-  function toggle(p: string) {
-    setExpanded((prev) => ({ ...prev, [p]: !(prev[p] ?? false) }));
+function ScopedBrowser({
+  homePath,
+  currentPath,
+  onNavigate,
+}: {
+  homePath: string;
+  currentPath: string;
+  onNavigate: (p: string) => void;
+}) {
+  const node = findNode(FOLDER_TREE, currentPath);
+  if (!node) {
+    return <AccessRestricted attemptedPath={currentPath} />;
   }
 
-  const node = findNode(FOLDER_TREE, selectedPath);
-  const canView = isPathInScope(persona, selectedPath);
+  // The user's "home" node — used to display friendly labels
+  const homeNode = findNode(FOLDER_TREE, homePath);
+  const homeName = homeNode?.name ?? "Home";
+
+  // Build a scope-relative breadcrumb: everything above the home path is hidden
+  const isAtHome = currentPath === homePath;
+  const parentPath = isAtHome
+    ? null
+    : currentPath.substring(0, currentPath.lastIndexOf("/"));
+
+  // Breadcrumb segments — from home down to current
+  const relative = currentPath.substring(homePath.length);
+  const segments = relative
+    .split("/")
+    .filter(Boolean); // drop leading empty from the initial "/"
+
+  const crumbs: { label: string; path: string }[] = [
+    { label: homeName, path: homePath },
+  ];
+  let acc = homePath;
+  for (const seg of segments) {
+    acc = `${acc}/${seg}`;
+    crumbs.push({ label: seg, path: acc });
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-[hsl(var(--signode-black))]">
-          Browse
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Navigate the Signode folder tree. Folders outside your scope are
-          locked.
-        </p>
+    <div className="space-y-4">
+      {/* Header strip */}
+      <Card>
+        <CardContent className="p-4 flex items-center gap-3 flex-wrap">
+          <div className="rounded-md p-2 bg-[hsl(var(--signode-orange))]/10 text-[hsl(var(--signode-orange))]">
+            <HomeIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">
+              Your workspace
+            </div>
+            <div className="font-semibold text-[hsl(var(--signode-black))] truncate">
+              {homeName}
+            </div>
+          </div>
+          {!isAtHome && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => parentPath && onNavigate(parentPath)}
+              className="gap-1"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Breadcrumb — scope-relative */}
+      <div className="flex items-center gap-1 flex-wrap text-sm text-muted-foreground px-1">
+        {crumbs.map((c, i) => (
+          <React.Fragment key={c.path}>
+            {i > 0 && <ChevronRight className="h-3.5 w-3.5" />}
+            <button
+              onClick={() => onNavigate(c.path)}
+              className={[
+                "px-1 py-0.5 rounded hover:bg-muted",
+                i === crumbs.length - 1
+                  ? "font-semibold text-[hsl(var(--signode-black))]"
+                  : "",
+              ].join(" ")}
+            >
+              {c.label}
+            </button>
+          </React.Fragment>
+        ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        {/* Tree */}
-        <Card>
-          <CardContent className="p-2">
-            <TreeNode
-              node={FOLDER_TREE}
-              depth={0}
-              selectedPath={selectedPath}
-              onSelect={onSelect}
-              expanded={expanded}
-              toggle={toggle}
-              personaScopeCheck={scopeCheck}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Detail */}
-        {canView && node ? (
-          <FolderDetail node={node} />
-        ) : (
-          <AccessRestricted attemptedPath={selectedPath} />
-        )}
-      </div>
+      {/* Detail (subfolders + files) */}
+      <FolderDetail node={node} onNavigate={onNavigate} showBreadcrumb={false} />
     </div>
   );
 }
 
-function FolderDetail({ node }: { node: FolderNode }) {
+// ---------------------------------------------------------------------------
+// Shared folder detail (subfolders + files)
+// ---------------------------------------------------------------------------
+
+function FolderDetail({
+  node,
+  onNavigate,
+  showBreadcrumb = true,
+}: {
+  node: FolderNode;
+  onNavigate?: (path: string) => void;
+  showBreadcrumb?: boolean;
+}) {
   const files = mockFilesFor(node.path);
   const crumbs = node.path.split("/");
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1 flex-wrap text-sm text-muted-foreground">
-        {crumbs.map((c, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <ChevronRight className="h-3.5 w-3.5" />}
-            <span
-              className={
-                i === crumbs.length - 1
-                  ? "font-semibold text-[hsl(var(--signode-black))]"
-                  : ""
-              }
-            >
-              {c}
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
+      {showBreadcrumb && (
+        <div className="flex items-center gap-1 flex-wrap text-sm text-muted-foreground">
+          {crumbs.map((c, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <ChevronRight className="h-3.5 w-3.5" />}
+              <span
+                className={
+                  i === crumbs.length - 1
+                    ? "font-semibold text-[hsl(var(--signode-black))]"
+                    : ""
+                }
+              >
+                {c}
+              </span>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
 
-      {/* Subfolders */}
       {node.children && node.children.length > 0 && (
         <Card>
           <CardContent className="p-4">
@@ -239,20 +294,20 @@ function FolderDetail({ node }: { node: FolderNode }) {
             </div>
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {node.children.map((c) => (
-                <div
+                <button
                   key={c.path}
-                  className="flex items-center gap-2 rounded-md border p-2 text-sm hover:border-[hsl(var(--signode-orange))] transition-colors"
+                  onClick={() => onNavigate?.(c.path)}
+                  className="flex items-center gap-2 rounded-md border p-2 text-sm text-left hover:border-[hsl(var(--signode-orange))] transition-colors"
                 >
-                  <Folder className="h-4 w-4 text-[hsl(var(--signode-orange))]" />
+                  <Folder className="h-4 w-4 text-[hsl(var(--signode-orange))] shrink-0" />
                   <span className="truncate">{c.name}</span>
-                </div>
+                </button>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Files */}
       <Card>
         <CardContent className="p-4">
           <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
@@ -284,9 +339,120 @@ function FolderDetail({ node }: { node: FolderNode }) {
   );
 }
 
-// Helper — does the persona have any scoped descendant under this path?
-// (so parent folders in the tree are still expandable even if not directly in scope)
-function hasScopedDescendant(persona: any, path: string): boolean {
-  if (persona.scopedPaths.includes("*")) return true;
-  return persona.scopedPaths.some((s: string) => s.startsWith(path + "/"));
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export function BrowsePage() {
+  const { persona } = usePersona();
+  const [params, setParams] = useSearchParams();
+
+  const isAdmin = persona.scopedPaths.includes("*");
+  const homePath = personaHomePath(persona);
+
+  // Default landing:
+  // - Admin: FileRoot (top of the tree)
+  // - Everyone else: their home (first scoped path)
+  const initial = params.get("path") || homePath;
+  const [selectedPath, setSelectedPath] = React.useState(initial);
+  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({
+    [FOLDER_TREE.path]: true,
+  });
+
+  // If persona changes (e.g. via switcher), reset to their home
+  React.useEffect(() => {
+    setSelectedPath(homePath);
+    setParams({ path: homePath });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persona.id]);
+
+  const scopeCheck = React.useCallback(
+    (p: string) => isPathInScope(persona, p) || hasScopedDescendant(persona, p),
+    [persona]
+  );
+
+  function onSelect(p: string) {
+    setSelectedPath(p);
+    setParams({ path: p });
+  }
+  function toggle(p: string) {
+    setExpanded((prev) => ({ ...prev, [p]: !(prev[p] ?? false) }));
+  }
+
+  // -----------------------------------------------------------------------
+  // Non-admin view — no tree at all
+  // -----------------------------------------------------------------------
+  if (!isAdmin) {
+    // If they tried to navigate outside their scope via URL, show restricted
+    const canView = isPathInScope(persona, selectedPath);
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-[hsl(var(--signode-black))]">
+            Browse
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Your assigned workspace. Contact{" "}
+            <span className="font-mono">itservicecenter@signode.com</span> if
+            you need access to a different folder.
+          </p>
+        </div>
+
+        {canView ? (
+          <ScopedBrowser
+            homePath={homePath}
+            currentPath={selectedPath}
+            onNavigate={onSelect}
+          />
+        ) : (
+          <AccessRestricted attemptedPath={selectedPath} />
+        )}
+      </div>
+    );
+  }
+
+  // -----------------------------------------------------------------------
+  // Admin view — full tree + detail
+  // -----------------------------------------------------------------------
+  const node = findNode(FOLDER_TREE, selectedPath);
+  const canView = isPathInScope(persona, selectedPath);
+
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-[hsl(var(--signode-black))]">
+          Browse
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Full administrator view of the Signode folder tree.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <Card>
+          <CardContent className="p-2">
+            <TreeNode
+              node={FOLDER_TREE}
+              depth={0}
+              selectedPath={selectedPath}
+              onSelect={onSelect}
+              expanded={expanded}
+              toggle={toggle}
+              personaScopeCheck={scopeCheck}
+            />
+          </CardContent>
+        </Card>
+
+        {canView && node ? (
+          <FolderDetail
+            node={node}
+            onNavigate={onSelect}
+            showBreadcrumb={true}
+          />
+        ) : (
+          <AccessRestricted attemptedPath={selectedPath} />
+        )}
+      </div>
+    </div>
+  );
 }
