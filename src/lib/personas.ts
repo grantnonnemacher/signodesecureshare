@@ -33,9 +33,11 @@ export const PERSONAS: Persona[] = [
     role: "Regional Sales Lead",
     organization: "Signode AMER",
     isInternal: true,
-    scopedPaths: ["Home/AMER/Sales", "Home/AMER/Marketing"],
+    scopedPaths: [
+      "FileRoot/01_Signode_AMER/Sales_and_Marketing",
+    ],
     description:
-      "Scoped to AMER Sales and Marketing folders. Can send invitations to vendors within scope.",
+      "Scoped to AMER Sales & Marketing. Can send invitations to vendors within scope.",
   },
   {
     id: "corp-legal",
@@ -43,9 +45,12 @@ export const PERSONAS: Persona[] = [
     role: "Corporate Counsel",
     organization: "Signode CORP",
     isInternal: true,
-    scopedPaths: ["Home/CORP/Legal", "Home/CORP/Compliance"],
+    scopedPaths: [
+      "FileRoot/05_Signode_CORP/Legal_and_Compliance",
+      "FileRoot/02_Signode_EMEA/Legal_and_Compliance",
+    ],
     description:
-      "Scoped to CORP Legal and Compliance folders. Can send invitations for NDA and contract exchanges.",
+      "Scoped to CORP Legal & Compliance and EMEA Legal & Compliance. Can send invitations for NDA and contract exchanges.",
   },
   {
     id: "vendor-a",
@@ -53,9 +58,11 @@ export const PERSONAS: Persona[] = [
     role: "External Vendor",
     organization: "Acme Packaging Co.",
     isInternal: false,
-    scopedPaths: ["Home/AMER/Sales/Vendor-A"],
+    scopedPaths: [
+      "FileRoot/01_Signode_AMER/Sales_and_Marketing/Customer_Accounts",
+    ],
     description:
-      "External vendor with access to a single shared folder. Cannot send invitations.",
+      "External vendor with access to a single shared folder in AMER Sales & Marketing. Cannot send invitations.",
   },
   {
     id: "vendor-b",
@@ -63,9 +70,11 @@ export const PERSONAS: Persona[] = [
     role: "External Vendor",
     organization: "Bravo Logistics Ltd.",
     isInternal: false,
-    scopedPaths: ["Home/EMEA/Procurement/Vendor-B"],
+    scopedPaths: [
+      "FileRoot/02_Signode_EMEA/Operations/EMEA/GPUK",
+    ],
     description:
-      "External vendor with access to a single shared folder. Cannot send invitations.",
+      "External vendor with access to a single EMEA BU folder (GPUK). Cannot send invitations.",
   },
   {
     id: "project-phoenix",
@@ -73,9 +82,11 @@ export const PERSONAS: Persona[] = [
     role: "External Project Team",
     organization: "Phoenix Consulting Group",
     isInternal: false,
-    scopedPaths: ["Home/CORP/Projects/Phoenix"],
+    scopedPaths: [
+      "FileRoot/05_Signode_CORP/Global_Projects/Active",
+    ],
     description:
-      "External project team with access to a single project folder. Cannot send invitations.",
+      "External project team with access to the CORP Active Global Projects folder. Cannot send invitations.",
   },
 ];
 
