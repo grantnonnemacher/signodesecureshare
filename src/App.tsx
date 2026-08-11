@@ -1,3 +1,8 @@
+import { DeploymentPage } from "@/pages/DeploymentPage";
+import { RunbooksPage } from "@/pages/RunbooksPage";
+import { ControlsPage } from "@/pages/ControlsPage";
+import { BuildGuidePage } from "@/pages/BuildGuidePage";
+import { SecurityPage } from "@/pages/SecurityPage";
 import { ArchitecturePage } from "@/pages/ArchitecturePage";
 import { Routes, Route } from "react-router-dom";
 import { SignodeHeader } from "@/components/signode/SignodeHeader";
@@ -45,27 +50,12 @@ export default function App() {
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/recent" element={<RecentPage />} />
         <Route path="/help" element={<HelpPage />} />
-        <Route
-          path="/build-guide"
-          element={<PlaceholderPage name="Build Guide" />}
-        />
+        <Route path="/build-guide" element={<BuildGuidePage />} />
         <Route path="/architecture" element={<ArchitecturePage />} />
-        <Route
-          path="/security"
-          element={<PlaceholderPage name="Security" />}
-        />
-        <Route
-          path="/controls"
-          element={<PlaceholderPage name="Controls" />}
-        />
-        <Route
-          path="/deployment"
-          element={<PlaceholderPage name="Deployment Roadmap" />}
-        />
-        <Route
-          path="/runbooks"
-          element={<PlaceholderPage name="Runbooks" />}
-        />
+        <Route path="/security" element={<SecurityPage />} />
+        <Route path="/controls" element={<ControlsPage />} />
+        <Route path="/deployment" element={<DeploymentPage />} />
+        <Route path="/runbooks" element={<RunbooksPage />} />
         <Route path="/source" element={<PlaceholderPage name="Source & IaC" />} />
         <Route
           path="*"

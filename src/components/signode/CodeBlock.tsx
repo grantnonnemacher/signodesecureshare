@@ -1,60 +1,55 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Copy, Check } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 
 type Props = {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
+  language?: string;
+  code: string;
+  filename?: string;
 };
 
-export function DocPageShell({ title, subtitle, children }: Props) {
+export function CodeBlock({ language, code, filename }: Props) {
   const [copied, setCopied] = React.useState(false);
-  const contentRef = React.useRef<HTMLDivElement>(null);
 
-  function handleCopyAll() {
-    if (!contentRef.current) return;
-    const text = contentRef.current.innerText;
-    navigator.clipboard.writeText(text);
+  function handleCopy() {
+    navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handlePrint() {
-    window.print();
-  }
-
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
-      <div className="flex items-start justify-between gap-4 mb-6 no-print">
-        <div>
-          <h1 className="text-3xl font-bold text-[hsl(var(--signode-black))]">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-2 text-muted-foreground">{subtitle}</p>
+    <div className="rounded-md border bg-[hsl(var(--signode-black))] text-white overflow-hidden my-4">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-white/5 text-xs">
+        <div className="flex items-center gap-2">
+          {language && (
+            <span className="uppercase tracking-wider text-[hsl(var(--signode-orange-soft))]">
+              {language}
+            </span>
+          )}
+          {filename && (
+            <span className="font-mono text-white/60">{filename}</span>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleCopyAll}>
-            {copied ? (
-              <>
-                <Check className="h-4 w-4 mr-2" /> Copied
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4 mr-2" /> Copy document
-              </>
-            )}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" /> Print to PDF
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 text-white hover:bg-white/10 gap-1.5 text-xs"
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5" /> Copied
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5" /> Copy
+            </>
+          )}
+        </Button>
       </div>
-      <div ref={contentRef} className="space-y-6">
-        {children}
-      </div>
+      <pre className="p-4 text-xs overflow-x-auto leading-relaxed">
+        <code>{code}</code>
+      </pre>
     </div>
   );
 }
