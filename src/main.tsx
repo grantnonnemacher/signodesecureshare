@@ -1,13 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { PersonaProvider } from "@/lib/persona-context";
 import App from "./App";
+// @ts-ignore: side-effect import of CSS file for bundler/runtime
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <PersonaProvider>
+        <App />
+      </PersonaProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
