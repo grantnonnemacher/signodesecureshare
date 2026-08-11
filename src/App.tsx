@@ -1,9 +1,15 @@
+import { ArchitecturePage } from "@/pages/ArchitecturePage";
 import { Routes, Route } from "react-router-dom";
 import { SignodeHeader } from "@/components/signode/SignodeHeader";
 import { SignInGate } from "@/components/signode/SignInGate";
 import { Toaster } from "@/components/ui/toaster";
 import { usePersona } from "@/lib/persona-context";
 import { Card, CardContent } from "@/components/ui/card";
+import { HomePage } from "@/pages/HomePage";
+import { HelpPage } from "@/pages/HelpPage";
+import { BrowsePage } from "@/pages/BrowsePage";
+import { UploadPage } from "@/pages/UploadPage";
+import { RecentPage } from "@/pages/RecentPage";
 
 function PlaceholderPage({ name }: { name: string }) {
   const { persona } = usePersona();
@@ -15,17 +21,11 @@ function PlaceholderPage({ name }: { name: string }) {
             {name}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            This page will be filled in during Batches 4–6.
+            This page will be filled in during Batches 5–6.
           </p>
           <p className="mt-4 text-sm">
             You are currently viewing as{" "}
             <strong>{persona.displayName}</strong> ({persona.role}).
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Scope:{" "}
-            <span className="font-mono">
-              {persona.scopedPaths.join(", ")}
-            </span>
           </p>
         </CardContent>
       </Card>
@@ -40,19 +40,16 @@ export default function App() {
       <SignInGate />
       <Toaster />
       <Routes>
-        <Route path="/" element={<PlaceholderPage name="Home" />} />
-        <Route path="/browse" element={<PlaceholderPage name="Browse" />} />
-        <Route path="/upload" element={<PlaceholderPage name="Upload" />} />
-        <Route path="/recent" element={<PlaceholderPage name="Recent" />} />
-        <Route path="/help" element={<PlaceholderPage name="Help" />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/browse" element={<BrowsePage />} />
+        <Route path="/upload" element={<UploadPage />} />
+        <Route path="/recent" element={<RecentPage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route
           path="/build-guide"
           element={<PlaceholderPage name="Build Guide" />}
         />
-        <Route
-          path="/architecture"
-          element={<PlaceholderPage name="Architecture" />}
-        />
+        <Route path="/architecture" element={<ArchitecturePage />} />
         <Route
           path="/security"
           element={<PlaceholderPage name="Security" />}

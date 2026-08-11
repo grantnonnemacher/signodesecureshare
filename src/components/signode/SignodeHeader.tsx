@@ -1,23 +1,38 @@
 import { NavLink } from "react-router-dom";
 import { PersonaSwitcher } from "./PersonaSwitcher";
 import { SendInvitationDialog } from "./SendInvitationDialog";
+import { usePersona } from "@/lib/persona-context";
 
-const NAV_ITEMS = [
+type NavItem = {
+  to: string;
+  label: string;
+  end?: boolean;
+  adminOnly?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Home", end: true },
   { to: "/browse", label: "Browse" },
   { to: "/upload", label: "Upload" },
   { to: "/recent", label: "Recent" },
   { to: "/help", label: "Help" },
-  { to: "/build-guide", label: "Build Guide" },
-  { to: "/architecture", label: "Architecture" },
-  { to: "/security", label: "Security" },
-  { to: "/controls", label: "Controls" },
-  { to: "/deployment", label: "Deployment Roadmap" },
-  { to: "/runbooks", label: "Runbooks" },
-  { to: "/source", label: "Source & IaC" },
+  { to: "/build-guide", label: "Build Guide", adminOnly: true },
+  { to: "/architecture", label: "Architecture", adminOnly: true },
+  { to: "/security", label: "Security", adminOnly: true },
+  { to: "/controls", label: "Controls", adminOnly: true },
+  { to: "/deployment", label: "Deployment Roadmap", adminOnly: true },
+  { to: "/runbooks", label: "Runbooks", adminOnly: true },
+  { to: "/source", label: "Source & IaC", adminOnly: true },
 ];
 
 export function SignodeHeader() {
+  const { persona } = usePersona();
+  const isGlobalAdmin = persona.id === "global-admin";
+
+  const visibleNav = NAV_ITEMS.filter(
+    (item) => !item.adminOnly || isGlobalAdmin
+  );
+
   return (
     <header className="signode-header-gradient border-b-4 border-[hsl(var(--signode-orange))] no-print sticky top-0 z-40">
       <div className="mx-auto max-w-7xl px-6">
@@ -36,7 +51,7 @@ export function SignodeHeader() {
         </div>
         {/* Bottom row: nav */}
         <nav className="flex flex-wrap gap-1 pb-2 -mx-1">
-          {NAV_ITEMS.map((item) => (
+          {visibleNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
